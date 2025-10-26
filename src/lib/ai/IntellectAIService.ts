@@ -1,95 +1,71 @@
-/**
- * Intellecty AI Service
- * Centralized AI service integrating all proprietary models
- * Enterprise-grade retail intelligence with comprehensive forecasting and optimization
- */
+// src/lib/ai/IntellectAIService.ts
+import { SyntheticDataGenerator } from './data/synthetic-data-generator';
+import { getWeatherData } from '@/lib/external-apis/weather-service';
+import { getEconomicData } from '@/lib/external-apis/economic-service';
+import { getTrendsData } from '@/lib/external-apis/trends-service';
 
-import { secureCache, CACHE_KEYS } from '../cache/redis';
-import { IntellectTemporalNet } from './pytorch/IntellectTemporalNet.pt';
-import { IntellectEnsembleIP } from './pytorch/IntellectEnsembleIP.pt';
-import { IntellectFashionNet } from './pytorch/IntellectFashionNet.pt';
-import { IntellectManufacturingNet } from './pytorch/IntellectManufacturingNet.pt';
-import { generateSyntheticData } from './data/synthetic-data-generator';
-
-export interface ForecastRequest {
-  productId: string;
-  category: string;
-  horizon: number; // days
-  includeExternalFactors: boolean;
-  confidenceLevel: number;
-  vertical: 'apparel' | 'industrial' | 'general';
+// Mock implementations for the AI models (representing .pt files)
+// In a real scenario, these would load actual PyTorch models
+class IntellectTemporalNet {
+  predict(data: any[]): number[] {
+    console.log('IntellectTemporalNet: Performing multi-scale time series forecasting...');
+    // Simulate complex time series prediction with realistic patterns
+    return data.map((_, i) => {
+      const baseValue = 100;
+      const seasonalComponent = Math.sin(i / 10) * 20;
+      const trendComponent = i * 0.5;
+      const noiseComponent = (Math.random() - 0.5) * 10;
+      return Math.max(0, baseValue + seasonalComponent + trendComponent + noiseComponent);
+    });
+  }
 }
 
-export interface ForecastResult {
-  productId: string;
-  category: string;
-  forecast: Array<{
-    date: string;
-    predictedDemand: number;
-    confidence: number;
-    lowerBound: number;
-    upperBound: number;
-    externalFactors: {
-      weather: number;
-      economic: number;
-      trends: number;
-      seasonal: number;
-    };
-  }>;
-  modelUsed: string;
-  accuracy: number;
-  mape: number;
-  generatedAt: string;
-  metadata: {
-    trainingDataPoints: number;
-    lastTrainingDate: string;
-    modelVersion: string;
-    preprocessingSteps: string[];
-  };
+class IntellectEnsembleIP {
+  blend(predictions: number[][]): number[] {
+    console.log('IntellectEnsembleIP: Blending multiple model predictions...');
+    // Simulate weighted ensemble blending with dynamic weights
+    const numModels = predictions.length;
+    const numPoints = predictions[0].length;
+    const blended = new Array(numPoints).fill(0);
+    
+    // Dynamic weights based on model performance
+    const weights = [0.4, 0.35, 0.25]; // Temporal, Fashion, Manufacturing weights
+    
+    for (let i = 0; i < numPoints; i++) {
+      for (let j = 0; j < numModels; j++) {
+        blended[i] += predictions[j][i] * weights[j];
+      }
+    }
+    return blended;
+  }
 }
 
-export interface OptimizationRequest {
-  productId: string;
-  currentStock: number;
-  leadTime: number;
-  serviceLevel: number;
-  holdingCost: number;
-  stockoutCost: number;
-  demandVariability: number;
+class IntellectFashionNet {
+  predict(data: any[]): number[] {
+    console.log('IntellectFashionNet: Detecting apparel trend lifecycle...');
+    // Simulate fashion-specific forecasting with trend cycles
+    return data.map((_, i) => {
+      const baseValue = 80;
+      const trendCycle = Math.cos(i / 5) * 15; // Fashion trends cycle faster
+      const seasonalBoost = Math.sin(i / 12) * 10; // Seasonal fashion trends
+      const noiseComponent = (Math.random() - 0.5) * 8;
+      return Math.max(0, baseValue + trendCycle + seasonalBoost + noiseComponent);
+    });
+  }
 }
 
-export interface OptimizationResult {
-  productId: string;
-  recommendedStock: number;
-  reorderPoint: number;
-  orderQuantity: number;
-  safetyStock: number;
-  serviceLevel: number;
-  expectedStockouts: number;
-  totalCost: number;
-  costBreakdown: {
-    holdingCost: number;
-    stockoutCost: number;
-    orderingCost: number;
-  };
-  confidence: number;
-  generatedAt: string;
-}
-
-export interface TrendAnalysis {
-  category: string;
-  trend: 'rising' | 'falling' | 'stable';
-  strength: number;
-  confidence: number;
-  lifecycle: 'introduction' | 'growth' | 'maturity' | 'decline';
-  seasonality: number;
-  externalFactors: {
-    weather: number;
-    economic: number;
-    social: number;
-  };
-  recommendations: string[];
-  generatedAt: string;
+class IntellectManufacturingNet {
+  predict(data: any[]): number[] {
+    console.log('IntellectManufacturingNet: Forecasting industrial parts demand...');
+    // Simulate industrial parts forecasting with project-based demand
+    return data.map((_, i) => {
+      const baseValue = 120;
+      const projectCycle = Math.sin(i / 8) * 25; // Industrial projects have longer cycles
+      const maintenanceSpike = Math.random() < 0.1 ? 50 : 0; // Occasional maintenance spikes
+      const noiseComponent = (Math.random() - 0.5) * 12;
+      return Math.max(0, baseValue + projectCycle + maintenanceSpike + noiseComponent);
+    });
+  }
 }
 
 export class IntellectAIService {
@@ -97,573 +73,306 @@ export class IntellectAIService {
   private ensembleIP: IntellectEnsembleIP;
   private fashionNet: IntellectFashionNet;
   private manufacturingNet: IntellectManufacturingNet;
+  private dataGenerator: SyntheticDataGenerator;
 
-  constructor() {
+  constructor(tenantId: string) {
     this.temporalNet = new IntellectTemporalNet();
     this.ensembleIP = new IntellectEnsembleIP();
     this.fashionNet = new IntellectFashionNet();
     this.manufacturingNet = new IntellectManufacturingNet();
+    this.dataGenerator = new SyntheticDataGenerator(tenantId);
   }
 
   /**
-   * Generate comprehensive demand forecast using appropriate AI model
+   * Generates a demand forecast for a given product, considering external factors.
    */
-  async generateForecast(request: ForecastRequest): Promise<ForecastResult> {
-    try {
-      // Check cache first
-      const cacheKey = CACHE_KEYS.AI_FORECAST(
-        request.productId,
-        request.horizon,
-        request.vertical
-      );
-      const cachedResult = await secureCache.get(cacheKey);
-      
-      if (cachedResult) {
-        console.log('📋 Returning cached forecast result');
-        return cachedResult;
-      }
+  async generateDemandForecast(
+    productId: string,
+    horizonDays: number,
+    location: string,
+    productVertical: 'INDUSTRIAL' | 'APPAREL' | 'GENERAL'
+  ): Promise<{ 
+    forecast: number[]; 
+    confidenceInterval: [number, number][]; 
+    mape: number;
+    insights: string[];
+    externalFactors: any;
+  }> {
+    console.log(`Generating demand forecast for product ${productId} (${productVertical}) for ${horizonDays} days...`);
 
-      // Select appropriate model based on vertical
-      let model;
-      let modelName;
-      
-      switch (request.vertical) {
-        case 'apparel':
-          model = this.fashionNet;
-          modelName = 'IntellectFashion-Net';
-          break;
-        case 'industrial':
-          model = this.manufacturingNet;
-          modelName = 'IntellectManufacturing-Net';
-          break;
-        default:
-          model = this.temporalNet;
-          modelName = 'IntellectTemporal-Net';
-      }
+    // 1. Fetch relevant external factors
+    const weatherData = await getWeatherData(34.052235, -118.243683, horizonDays); // Example LA coordinates
+    const economicData = await getEconomicData('US');
+    const trendsData = await getTrendsData('retail', horizonDays);
 
-      // Generate synthetic training data if needed
-      const trainingData = await this.generateTrainingData(request);
+    // 2. Generate synthetic historical data for the product (for demonstration)
+    const today = new Date();
+    const pastDate = new Date();
+    pastDate.setDate(today.getDate() - 365); // 1 year of historical data
+    const mockProducts = this.dataGenerator.generateProducts(1, productVertical);
+    const mockSales = this.dataGenerator.generateSalesData(mockProducts, pastDate, today);
 
-      // Train model with fresh data
-      await model.train(trainingData);
+    // Combine historical sales with external factors
+    const combinedData = mockSales.map(s => ({
+      ...s,
+      temperature: weatherData?.current?.temperature || 20,
+      gdpGrowth: economicData?.indicators?.gdp || 2.5,
+      searchInterest: trendsData?.[0]?.value || 50,
+    }));
 
-      // Generate forecast
-      const forecast = await model.predict({
-        productId: request.productId,
-        category: request.category,
-        horizon: request.horizon,
-        includeExternalFactors: request.includeExternalFactors,
-        confidenceLevel: request.confidenceLevel
-      });
-
-      // Apply ensemble blending for improved accuracy
-      const ensembleResult = await this.ensembleIP.blend([
-        { model: 'temporal', prediction: forecast },
-        { model: 'statistical', prediction: this.generateStatisticalForecast(request) },
-        { model: 'external', prediction: this.generateExternalFactorForecast(request) }
-      ]);
-
-      const result: ForecastResult = {
-        productId: request.productId,
-        category: request.category,
-        forecast: ensembleResult.forecast,
-        modelUsed: modelName,
-        accuracy: ensembleResult.accuracy,
-        mape: ensembleResult.mape,
-        generatedAt: new Date().toISOString(),
-        metadata: {
-          trainingDataPoints: trainingData.length,
-          lastTrainingDate: new Date().toISOString(),
-          modelVersion: '1.0.0',
-          preprocessingSteps: ['normalization', 'feature_engineering', 'outlier_detection']
-        }
-      };
-
-      // Cache the result
-      await secureCache.set(cacheKey, result, 3600); // Cache for 1 hour
-
-      return result;
-    } catch (error) {
-      console.error('Forecast generation error:', error);
-      throw new Error('Failed to generate forecast');
+    // 3. Apply proprietary AI models
+    let basePredictions: number[];
+    if (productVertical === 'APPAREL') {
+      basePredictions = this.fashionNet.predict(combinedData.slice(-horizonDays));
+    } else if (productVertical === 'INDUSTRIAL') {
+      basePredictions = this.manufacturingNet.predict(combinedData.slice(-horizonDays));
+    } else {
+      basePredictions = this.temporalNet.predict(combinedData.slice(-horizonDays));
     }
+
+    // Create ensemble predictions
+    const model1Predictions = this.temporalNet.predict(combinedData.slice(-horizonDays));
+    const model2Predictions = this.fashionNet.predict(combinedData.slice(-horizonDays));
+    const model3Predictions = this.manufacturingNet.predict(combinedData.slice(-horizonDays));
+
+    const ensemblePredictions = this.ensembleIP.blend([
+      model1Predictions,
+      model2Predictions,
+      model3Predictions,
+    ]);
+
+    // Ensure the forecast length matches horizonDays
+    const finalForecast = ensemblePredictions.slice(0, horizonDays);
+
+    // Simulate confidence intervals (e.g., +/- 10% of forecast)
+    const confidenceInterval: [number, number][] = finalForecast.map(val => [
+      Math.max(0, val * 0.85), 
+      val * 1.15
+    ]);
+
+    // Simulate MAPE (Mean Absolute Percentage Error)
+    const mape = parseFloat((5 + Math.random() * 5).toFixed(2)); // 5-10% MAPE for mock
+
+    // Generate insights based on external factors
+    const insights = this.generateInsights(weatherData, economicData, trendsData, productVertical);
+
+    console.log(`Forecast generated for product ${productId}. MAPE: ${mape}%`);
+    return { 
+      forecast: finalForecast, 
+      confidenceInterval, 
+      mape,
+      insights,
+      externalFactors: {
+        weather: weatherData,
+        economic: economicData,
+        trends: trendsData
+      }
+    };
   }
 
   /**
-   * Optimize inventory levels using AI-driven recommendations
+   * Provides inventory optimization recommendations.
    */
-  async optimizeInventory(request: OptimizationRequest): Promise<OptimizationResult> {
-    try {
-      // Check cache first
-      const cacheKey = CACHE_KEYS.AI_OPTIMIZATION(
-        request.productId,
-        request.serviceLevel
-      );
-      const cachedResult = await secureCache.get(cacheKey);
-      
-      if (cachedResult) {
-        console.log('📋 Returning cached optimization result');
-        return cachedResult;
-      }
+  async getInventoryOptimization(
+    productId: string,
+    currentStock: number,
+    leadTimeDays: number,
+    demandForecast: number[]
+  ): Promise<{
+    optimalReorderPoint: number;
+    optimalSafetyStock: number;
+    recommendedOrderQuantity: number;
+    wastePrediction: number;
+    carbonFootprintReduction: number;
+    costSavings: number;
+    recommendations: string[];
+  }> {
+    console.log(`Optimizing inventory for product ${productId}...`);
 
-      // Generate optimization using multiple approaches
-      const [aiOptimization, statisticalOptimization, mlOptimization] = await Promise.all([
-        this.generateAIOptimization(request),
-        this.generateStatisticalOptimization(request),
-        this.generateMLOptimization(request)
-      ]);
+    // Simulate complex optimization logic
+    const forecastedDemandSum = demandForecast.reduce((sum, val) => sum + val, 0);
+    const avgDailyDemand = forecastedDemandSum / demandForecast.length;
+    const demandVariability = this.calculateDemandVariability(demandForecast);
 
-      // Apply ensemble blending for optimal results
-      const ensembleResult = await this.ensembleIP.blendOptimization([
-        aiOptimization,
-        statisticalOptimization,
-        mlOptimization
-      ]);
+    const optimalReorderPoint = Math.round(avgDailyDemand * leadTimeDays * (1 + demandVariability * 0.5));
+    const optimalSafetyStock = Math.round(avgDailyDemand * 7 * (1 + demandVariability));
+    const recommendedOrderQuantity = Math.round(
+      Math.max(0, optimalReorderPoint + optimalSafetyStock - currentStock + avgDailyDemand * 30)
+    );
 
-      const result: OptimizationResult = {
-        productId: request.productId,
-        recommendedStock: ensembleResult.recommendedStock,
-        reorderPoint: ensembleResult.reorderPoint,
-        orderQuantity: ensembleResult.orderQuantity,
-        safetyStock: ensembleResult.safetyStock,
-        serviceLevel: request.serviceLevel,
-        expectedStockouts: ensembleResult.expectedStockouts,
-        totalCost: ensembleResult.totalCost,
-        costBreakdown: ensembleResult.costBreakdown,
-        confidence: ensembleResult.confidence,
-        generatedAt: new Date().toISOString()
-      };
+    const wastePrediction = parseFloat((Math.random() * 10).toFixed(2)); // Simulate 0-10% waste
+    const carbonFootprintReduction = parseFloat((Math.random() * 20).toFixed(2)); // Simulate 0-20% reduction
+    const costSavings = parseFloat((Math.random() * 15 + 5).toFixed(2)); // Simulate 5-20% cost savings
 
-      // Cache the result
-      await secureCache.set(cacheKey, result, 1800); // Cache for 30 minutes
+    const recommendations = this.generateInventoryRecommendations(
+      currentStock,
+      optimalReorderPoint,
+      optimalSafetyStock,
+      wastePrediction
+    );
 
-      return result;
-    } catch (error) {
-      console.error('Inventory optimization error:', error);
-      throw new Error('Failed to optimize inventory');
-    }
+    return {
+      optimalReorderPoint,
+      optimalSafetyStock,
+      recommendedOrderQuantity,
+      wastePrediction,
+      carbonFootprintReduction,
+      costSavings,
+      recommendations
+    };
   }
 
   /**
-   * Analyze trends and provide actionable insights
+   * Generates ABC analysis for inventory classification.
    */
-  async analyzeTrends(category: string, vertical: string): Promise<TrendAnalysis> {
-    try {
-      // Check cache first
-      const cacheKey = CACHE_KEYS.AI_TRENDS(category, vertical);
-      const cachedResult = await secureCache.get(cacheKey);
-      
-      if (cachedResult) {
-        console.log('📋 Returning cached trend analysis');
-        return cachedResult;
-      }
+  async generateABCAnalysis(products: any[]): Promise<{
+    categoryA: any[];
+    categoryB: any[];
+    categoryC: any[];
+    analysis: {
+      totalValue: number;
+      categoryAPercentage: number;
+      categoryBPercentage: number;
+      categoryCPercentage: number;
+    };
+  }> {
+    console.log('Generating ABC analysis...');
 
-      // Generate trend analysis using appropriate model
-      let model;
-      if (vertical === 'apparel') {
-        model = this.fashionNet;
-      } else if (vertical === 'industrial') {
-        model = this.manufacturingNet;
+    // Sort products by value (price * quantity)
+    const sortedProducts = products.sort((a, b) => (b.price * b.quantity) - (a.price * a.quantity));
+    
+    const totalValue = sortedProducts.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+    let cumulativeValue = 0;
+    
+    const categoryA: any[] = [];
+    const categoryB: any[] = [];
+    const categoryC: any[] = [];
+
+    sortedProducts.forEach((product, index) => {
+      const productValue = product.price * product.quantity;
+      cumulativeValue += productValue;
+      const percentage = (cumulativeValue / totalValue) * 100;
+
+      if (percentage <= 80) {
+        categoryA.push({ ...product, category: 'A', percentage });
+      } else if (percentage <= 95) {
+        categoryB.push({ ...product, category: 'B', percentage });
       } else {
-        model = this.temporalNet;
+        categoryC.push({ ...product, category: 'C', percentage });
       }
-
-      const trendData = await model.analyzeTrends(category);
-      
-      const result: TrendAnalysis = {
-        category,
-        trend: trendData.trend,
-        strength: trendData.strength,
-        confidence: trendData.confidence,
-        lifecycle: trendData.lifecycle,
-        seasonality: trendData.seasonality,
-        externalFactors: trendData.externalFactors,
-        recommendations: this.generateRecommendations(trendData),
-        generatedAt: new Date().toISOString()
-      };
-
-      // Cache the result
-      await secureCache.set(cacheKey, result, 7200); // Cache for 2 hours
-
-      return result;
-    } catch (error) {
-      console.error('Trend analysis error:', error);
-      throw new Error('Failed to analyze trends');
-    }
-  }
-
-  /**
-   * Generate comprehensive business insights
-   */
-  async generateInsights(tenantId: string, category: string): Promise<{
-    insights: Array<{
-      type: 'forecast' | 'optimization' | 'trend' | 'anomaly';
-      title: string;
-      description: string;
-      impact: 'high' | 'medium' | 'low';
-      confidence: number;
-      action: string;
-      value: number;
-    }>;
-    summary: {
-      totalInsights: number;
-      highImpact: number;
-      mediumImpact: number;
-      lowImpact: number;
-      averageConfidence: number;
-    };
-  }> {
-    try {
-      // Check cache first
-      const cacheKey = CACHE_KEYS.AI_INSIGHTS(tenantId, category);
-      const cachedResult = await secureCache.get(cacheKey);
-      
-      if (cachedResult) {
-        console.log('📋 Returning cached insights');
-        return cachedResult;
-      }
-
-      // Generate insights using all models
-      const [forecastInsights, optimizationInsights, trendInsights, anomalyInsights] = await Promise.all([
-        this.generateForecastInsights(tenantId, category),
-        this.generateOptimizationInsights(tenantId, category),
-        this.generateTrendInsights(tenantId, category),
-        this.generateAnomalyInsights(tenantId, category)
-      ]);
-
-      const allInsights = [
-        ...forecastInsights,
-        ...optimizationInsights,
-        ...trendInsights,
-        ...anomalyInsights
-      ];
-
-      const summary = {
-        totalInsights: allInsights.length,
-        highImpact: allInsights.filter(i => i.impact === 'high').length,
-        mediumImpact: allInsights.filter(i => i.impact === 'medium').length,
-        lowImpact: allInsights.filter(i => i.impact === 'low').length,
-        averageConfidence: allInsights.reduce((sum, i) => sum + i.confidence, 0) / allInsights.length
-      };
-
-      const result = {
-        insights: allInsights,
-        summary
-      };
-
-      // Cache the result
-      await secureCache.set(cacheKey, result, 1800); // Cache for 30 minutes
-
-      return result;
-    } catch (error) {
-      console.error('Insights generation error:', error);
-      throw new Error('Failed to generate insights');
-    }
-  }
-
-  /**
-   * Train all models with fresh data
-   */
-  async retrainModels(tenantId: string): Promise<{
-    temporalNet: { accuracy: number; mape: number; status: string };
-    ensembleIP: { accuracy: number; mape: number; status: string };
-    fashionNet: { accuracy: number; mape: number; status: string };
-    manufacturingNet: { accuracy: number; mape: number; status: string };
-  }> {
-    try {
-      console.log('🔄 Starting model retraining for tenant:', tenantId);
-
-      // Generate comprehensive training data
-      const trainingData = await generateSyntheticData({
-        tenantId,
-        categories: ['electronics', 'apparel', 'industrial', 'general'],
-        timeRange: 365, // 1 year
-        dataPoints: 10000
-      });
-
-      // Train all models in parallel
-      const [temporalResult, ensembleResult, fashionResult, manufacturingResult] = await Promise.all([
-        this.temporalNet.retrain(trainingData),
-        this.ensembleIP.retrain(trainingData),
-        this.fashionNet.retrain(trainingData),
-        this.manufacturingNet.retrain(trainingData)
-      ]);
-
-      const result = {
-        temporalNet: temporalResult,
-        ensembleIP: ensembleResult,
-        fashionNet: fashionResult,
-        manufacturingNet: manufacturingResult
-      };
-
-      console.log('✅ Model retraining completed:', result);
-      return result;
-    } catch (error) {
-      console.error('Model retraining error:', error);
-      throw new Error('Failed to retrain models');
-    }
-  }
-
-  // Private helper methods
-  private async generateTrainingData(request: ForecastRequest) {
-    return await generateSyntheticData({
-      tenantId: 'demo-tenant',
-      categories: [request.category],
-      timeRange: 180, // 6 months
-      dataPoints: 5000
     });
-  }
 
-  private generateStatisticalForecast(request: ForecastRequest) {
-    // Generate statistical forecast using classical methods
-    const baseDemand = 100 + Math.random() * 200;
-    const forecast = [];
-    
-    for (let i = 0; i < request.horizon; i++) {
-      const trend = Math.sin(i / 7) * 0.1; // Weekly seasonality
-      const noise = (Math.random() - 0.5) * 0.2;
-      const demand = baseDemand * (1 + trend + noise);
-      
-      forecast.push({
-        date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString(),
-        predictedDemand: Math.max(0, demand),
-        confidence: 0.7 + Math.random() * 0.2,
-        lowerBound: demand * 0.8,
-        upperBound: demand * 1.2,
-        externalFactors: {
-          weather: Math.random() * 0.1,
-          economic: Math.random() * 0.1,
-          trends: Math.random() * 0.1,
-          seasonal: Math.sin(i / 30) * 0.2
-        }
-      });
-    }
-    
-    return { forecast, accuracy: 0.75, mape: 0.25 };
-  }
-
-  private generateExternalFactorForecast(request: ForecastRequest) {
-    // Generate forecast considering external factors
-    const baseDemand = 120 + Math.random() * 180;
-    const forecast = [];
-    
-    for (let i = 0; i < request.horizon; i++) {
-      const weatherImpact = Math.random() * 0.3;
-      const economicImpact = Math.random() * 0.2;
-      const trendImpact = Math.random() * 0.25;
-      const demand = baseDemand * (1 + weatherImpact + economicImpact + trendImpact);
-      
-      forecast.push({
-        date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString(),
-        predictedDemand: Math.max(0, demand),
-        confidence: 0.8 + Math.random() * 0.15,
-        lowerBound: demand * 0.75,
-        upperBound: demand * 1.25,
-        externalFactors: {
-          weather: weatherImpact,
-          economic: economicImpact,
-          trends: trendImpact,
-          seasonal: Math.sin(i / 30) * 0.15
-        }
-      });
-    }
-    
-    return { forecast, accuracy: 0.82, mape: 0.18 };
-  }
-
-  private async generateAIOptimization(request: OptimizationRequest) {
-    // AI-based optimization
-    const demandVariability = request.demandVariability;
-    const leadTime = request.leadTime;
-    const serviceLevel = request.serviceLevel;
-    
-    // Calculate safety stock using AI-enhanced formula
-    const safetyStock = Math.sqrt(leadTime) * demandVariability * this.getServiceLevelFactor(serviceLevel);
-    const reorderPoint = (request.currentStock * 0.3) + safetyStock;
-    const orderQuantity = Math.max(50, request.currentStock * 0.4);
-    
     return {
-      recommendedStock: request.currentStock + orderQuantity,
-      reorderPoint,
-      orderQuantity,
-      safetyStock,
-      expectedStockouts: Math.max(0, (1 - serviceLevel) * 10),
-      totalCost: (safetyStock * request.holdingCost) + (orderQuantity * 0.1),
-      costBreakdown: {
-        holdingCost: safetyStock * request.holdingCost,
-        stockoutCost: Math.max(0, (1 - serviceLevel) * 10) * request.stockoutCost,
-        orderingCost: orderQuantity * 0.1
-      },
-      confidence: 0.85 + Math.random() * 0.1
-    };
-  }
-
-  private generateStatisticalOptimization(request: OptimizationRequest) {
-    // Statistical optimization using EOQ and safety stock formulas
-    const demand = request.currentStock * 0.1; // Daily demand estimate
-    const holdingCost = request.holdingCost;
-    const orderingCost = 50; // Fixed ordering cost
-    
-    const eoq = Math.sqrt((2 * demand * 365 * orderingCost) / holdingCost);
-    const safetyStock = request.demandVariability * Math.sqrt(request.leadTime) * 1.96; // 95% service level
-    
-    return {
-      recommendedStock: request.currentStock + eoq,
-      reorderPoint: demand * request.leadTime + safetyStock,
-      orderQuantity: eoq,
-      safetyStock,
-      expectedStockouts: Math.max(0, (1 - request.serviceLevel) * 12),
-      totalCost: (safetyStock * holdingCost) + (eoq * 0.1),
-      costBreakdown: {
-        holdingCost: safetyStock * holdingCost,
-        stockoutCost: Math.max(0, (1 - request.serviceLevel) * 12) * request.stockoutCost,
-        orderingCost: eoq * 0.1
-      },
-      confidence: 0.75 + Math.random() * 0.15
-    };
-  }
-
-  private generateMLOptimization(request: OptimizationRequest) {
-    // Machine learning-based optimization
-    const features = [
-      request.currentStock,
-      request.leadTime,
-      request.serviceLevel,
-      request.holdingCost,
-      request.stockoutCost,
-      request.demandVariability
-    ];
-    
-    // Simulate ML model prediction
-    const mlPrediction = this.simulateMLPrediction(features);
-    
-    return {
-      recommendedStock: mlPrediction.recommendedStock,
-      reorderPoint: mlPrediction.reorderPoint,
-      orderQuantity: mlPrediction.orderQuantity,
-      safetyStock: mlPrediction.safetyStock,
-      expectedStockouts: mlPrediction.expectedStockouts,
-      totalCost: mlPrediction.totalCost,
-      costBreakdown: mlPrediction.costBreakdown,
-      confidence: 0.88 + Math.random() * 0.1
-    };
-  }
-
-  private simulateMLPrediction(features: number[]) {
-    // Simulate ML model prediction based on features
-    const [currentStock, leadTime, serviceLevel, holdingCost, stockoutCost, demandVariability] = features;
-    
-    const safetyStock = demandVariability * Math.sqrt(leadTime) * (1 + serviceLevel);
-    const reorderPoint = currentStock * 0.2 + safetyStock;
-    const orderQuantity = Math.max(30, currentStock * 0.3);
-    
-    return {
-      recommendedStock: currentStock + orderQuantity,
-      reorderPoint,
-      orderQuantity,
-      safetyStock,
-      expectedStockouts: Math.max(0, (1 - serviceLevel) * 8),
-      totalCost: (safetyStock * holdingCost) + (orderQuantity * 0.08),
-      costBreakdown: {
-        holdingCost: safetyStock * holdingCost,
-        stockoutCost: Math.max(0, (1 - serviceLevel) * 8) * stockoutCost,
-        orderingCost: orderQuantity * 0.08
+      categoryA,
+      categoryB,
+      categoryC,
+      analysis: {
+        totalValue,
+        categoryAPercentage: (categoryA.reduce((sum, p) => sum + (p.price * p.quantity), 0) / totalValue) * 100,
+        categoryBPercentage: (categoryB.reduce((sum, p) => sum + (p.price * p.quantity), 0) / totalValue) * 100,
+        categoryCPercentage: (categoryC.reduce((sum, p) => sum + (p.price * p.quantity), 0) / totalValue) * 100,
       }
     };
   }
 
-  private getServiceLevelFactor(serviceLevel: number): number {
-    // Convert service level to z-score
-    if (serviceLevel >= 0.99) return 2.33;
-    if (serviceLevel >= 0.95) return 1.96;
-    if (serviceLevel >= 0.90) return 1.64;
-    if (serviceLevel >= 0.80) return 1.28;
-    return 1.0;
+  /**
+   * Generates sustainability insights and recommendations.
+   */
+  async generateSustainabilityInsights(tenantId: string): Promise<{
+    carbonFootprint: number;
+    wasteReduction: number;
+    energyEfficiency: number;
+    recommendations: string[];
+    metrics: {
+      totalWaste: number;
+      carbonEmissions: number;
+      energyConsumption: number;
+      recyclingRate: number;
+    };
+  }> {
+    console.log('Generating sustainability insights...');
+
+    const metrics = {
+      totalWaste: parseFloat((Math.random() * 1000 + 500).toFixed(2)),
+      carbonEmissions: parseFloat((Math.random() * 500 + 200).toFixed(2)),
+      energyConsumption: parseFloat((Math.random() * 2000 + 1000).toFixed(2)),
+      recyclingRate: parseFloat((Math.random() * 30 + 60).toFixed(2))
+    };
+
+    const carbonFootprint = parseFloat((Math.random() * 20 + 10).toFixed(2));
+    const wasteReduction = parseFloat((Math.random() * 25 + 15).toFixed(2));
+    const energyEfficiency = parseFloat((Math.random() * 15 + 20).toFixed(2));
+
+    const recommendations = [
+      "Implement automated inventory optimization to reduce waste by 15-20%",
+      "Switch to renewable energy sources for 30% reduction in carbon footprint",
+      "Optimize transportation routes to reduce emissions by 12%",
+      "Implement circular economy practices for 25% waste reduction"
+    ];
+
+    return {
+      carbonFootprint,
+      wasteReduction,
+      energyEfficiency,
+      recommendations,
+      metrics
+    };
   }
 
-  private generateRecommendations(trendData: any): string[] {
-    const recommendations = [];
+  // Helper methods
+  private calculateDemandVariability(forecast: number[]): number {
+    const mean = forecast.reduce((sum, val) => sum + val, 0) / forecast.length;
+    const variance = forecast.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / forecast.length;
+    return Math.sqrt(variance) / mean; // Coefficient of variation
+  }
+
+  private generateInsights(weather: any, economic: any, trends: any, vertical: string): string[] {
+    const insights: string[] = [];
     
-    if (trendData.trend === 'rising') {
-      recommendations.push('Increase inventory levels to meet growing demand');
-      recommendations.push('Consider expanding product line in this category');
-    } else if (trendData.trend === 'falling') {
-      recommendations.push('Reduce inventory levels to avoid overstock');
-      recommendations.push('Consider promotional activities to boost sales');
+    if (weather?.current?.temperature > 25) {
+      insights.push("High temperatures may increase demand for cooling-related products");
     }
     
-    if (trendData.lifecycle === 'decline') {
-      recommendations.push('Plan for product phase-out strategy');
-      recommendations.push('Focus on clearing existing inventory');
+    if (economic?.indicators?.gdp > 3) {
+      insights.push("Strong economic growth suggests increased consumer spending");
     }
     
-    if (trendData.seasonality > 0.5) {
-      recommendations.push('Implement seasonal inventory planning');
-      recommendations.push('Prepare for peak season demand');
+    if (trends?.[0]?.value > 70) {
+      insights.push("High search interest indicates growing market demand");
     }
+
+    if (vertical === 'APPAREL') {
+      insights.push("Fashion trends show seasonal patterns - consider trend lifecycle management");
+    } else if (vertical === 'INDUSTRIAL') {
+      insights.push("Industrial demand correlates with maintenance cycles and project timelines");
+    }
+
+    return insights;
+  }
+
+  private generateInventoryRecommendations(
+    currentStock: number,
+    reorderPoint: number,
+    safetyStock: number,
+    wastePrediction: number
+  ): string[] {
+    const recommendations: string[] = [];
+    
+    if (currentStock < reorderPoint) {
+      recommendations.push("Immediate reorder required - stock below reorder point");
+    }
+    
+    if (wastePrediction > 5) {
+      recommendations.push("High waste prediction - consider reducing order quantities");
+    }
+    
+    if (safetyStock > currentStock * 0.5) {
+      recommendations.push("Safety stock levels are high - consider optimization");
+    }
+    
+    recommendations.push("Implement just-in-time inventory for cost reduction");
+    recommendations.push("Use ABC analysis to prioritize high-value items");
     
     return recommendations;
   }
-
-  private async generateForecastInsights(tenantId: string, category: string) {
-    // Generate forecast-related insights
-    return [
-      {
-        type: 'forecast' as const,
-        title: 'Demand spike predicted',
-        description: `AI detected 23% increase in ${category} demand for next 2 weeks`,
-        impact: 'high' as const,
-        confidence: 94,
-        action: 'Increase stock levels',
-        value: 15000
-      }
-    ];
-  }
-
-  private async generateOptimizationInsights(tenantId: string, category: string) {
-    // Generate optimization-related insights
-    return [
-      {
-        type: 'optimization' as const,
-        title: 'Replenishment opportunity',
-        description: 'Consolidate 3 purchase orders to save $2,400 in shipping',
-        impact: 'high' as const,
-        confidence: 96,
-        action: 'Optimize orders',
-        value: 2400
-      }
-    ];
-  }
-
-  private async generateTrendInsights(tenantId: string, category: string) {
-    // Generate trend-related insights
-    return [
-      {
-        type: 'trend' as const,
-        title: 'Market trend detected',
-        description: `${category} showing strong upward trend with 15% growth`,
-        impact: 'medium' as const,
-        confidence: 87,
-        action: 'Capitalize on trend',
-        value: 8500
-      }
-    ];
-  }
-
-  private async generateAnomalyInsights(tenantId: string, category: string) {
-    // Generate anomaly-related insights
-    return [
-      {
-        type: 'anomaly' as const,
-        title: 'Unusual pattern detected',
-        description: `Sales pattern in ${category} deviates from historical norms`,
-        impact: 'medium' as const,
-        confidence: 78,
-        action: 'Investigate cause',
-        value: 0
-      }
-    ];
-  }
 }
-
-export const intellectAIService = new IntellectAIService();

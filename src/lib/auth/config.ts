@@ -19,19 +19,48 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        // Demo user for testing
-        if (credentials.email === "demo@intellecty.com" && credentials.password === "demo123") {
-          return {
-            id: "demo-user",
+        // Demo users for testing
+        const demoUsers = [
+          {
             email: "demo@intellecty.com",
-            name: "Demo User",
-            role: "ADMIN",
-            tenantId: "demo-tenant",
-            tenant: { id: "demo-tenant", name: "Demo Company", tier: "FREE" }
+            password: "demo123",
+            user: {
+              id: "demo-user",
+              email: "demo@intellecty.com",
+              name: "Demo User",
+              role: "ADMIN",
+              tenantId: "demo-tenant",
+              tenant: { id: "demo-tenant", name: "Demo Company", tier: "FREE" }
+            }
+          },
+          {
+            email: "admin@intellecty.com",
+            password: "admin123",
+            user: {
+              id: "admin-user",
+              email: "admin@intellecty.com",
+              name: "Admin User",
+              role: "ADMIN",
+              tenantId: "admin-tenant",
+              tenant: { id: "admin-tenant", name: "Admin Company", tier: "PREMIUM" }
+            }
+          },
+          {
+            email: "customer@intellecty.com",
+            password: "customer123",
+            user: {
+              id: "customer-user",
+              email: "customer@intellecty.com",
+              name: "Customer User",
+              role: "USER",
+              tenantId: "customer-tenant",
+              tenant: { id: "customer-tenant", name: "Customer Company", tier: "GROWTH" }
+            }
           }
-        }
+        ];
 
-        return null
+        const foundUser = demoUsers.find(u => u.email === credentials.email && u.password === credentials.password);
+        return foundUser ? foundUser.user : null;
       }
     })
   ],
@@ -39,11 +68,22 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt"
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.role = user.role
-        token.tenantId = user.tenantId
-        token.tenant = user.tenant
+        // For Google OAuth users, create default tenant info
+        if (account?.provider === "google") {
+          token.role = "USER";
+          token.tenantId = `google-${user.id}`;
+          token.tenant = { 
+            id: `google-${user.id}`, 
+            name: `${user.name}'s Company`, 
+            tier: "FREE" 
+          };
+        } else {
+          token.role = user.role;
+          token.tenantId = user.tenantId;
+          token.tenant = user.tenant;
+        }
       }
       return token
     },

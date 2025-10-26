@@ -1,109 +1,161 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
+import { IntellectAIService } from '@/lib/ai/IntellectAIService';
+import { industrialProducts } from '@/lib/demo-data/industrial-data';
+import { apparelProducts } from '@/lib/demo-data/apparel-data';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { productId, serviceLevel = 0.95, carryingCost = 0.2, stockoutCost = 100 } = body
+    const body = await request.json();
+    const { productId, currentStock, leadTimeDays = 14, horizon = 30 } = body;
 
     if (!productId) {
-      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
-    // Mock inventory optimization for demo
-    const mockRecommendation = {
-      action: 'REORDER',
-      quantity: 50,
-      reason: 'Current stock below reorder point',
-      priority: 'HIGH',
-      expectedImpact: {
-        costSavings: 500,
-        serviceLevelImprovement: 0.15
-      },
-      confidence: 0.85
+    // Initialize AI service
+    const aiService = new IntellectAIService('demo-tenant');
+
+    // Find the product
+    const allProducts = [...industrialProducts, ...apparelProducts];
+    const product = allProducts.find(p => p.id === productId);
+    
+    if (!product) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      );
     }
+
+    // Generate demand forecast for optimization
+    const forecastResult = await aiService.generateDemandForecast(
+      productId,
+      horizon,
+      "Los Angeles",
+      product.vertical as 'INDUSTRIAL' | 'APPAREL' | 'GENERAL'
+    );
+
+    // Get inventory optimization recommendations
+    const optimizationResult = await aiService.getInventoryOptimization(
+      productId,
+      currentStock || product.currentStock,
+      leadTimeDays,
+      forecastResult.forecast
+    );
 
     return NextResponse.json({
       success: true,
       data: {
         productId,
-        productName: "Demo Product",
-        currentStock: 5,
-        recommendation: mockRecommendation,
-        optimizedAt: new Date().toISOString()
+        productName: product.name,
+        productCategory: product.category,
+        currentStock: currentStock || product.currentStock,
+        leadTimeDays,
+        optimization: {
+          optimalReorderPoint: optimizationResult.optimalReorderPoint,
+          optimalSafetyStock: optimizationResult.optimalSafetyStock,
+          recommendedOrderQuantity: optimizationResult.recommendedOrderQuantity,
+          wastePrediction: optimizationResult.wastePrediction,
+          carbonFootprintReduction: optimizationResult.carbonFootprintReduction,
+          costSavings: optimizationResult.costSavings,
+          recommendations: optimizationResult.recommendations
+        },
+        forecast: {
+          horizon,
+          predictedDemand: forecastResult.forecast,
+          accuracy: 100 - forecastResult.mape,
+          mape: forecastResult.mape,
+          insights: forecastResult.insights
+        },
+        generatedAt: new Date().toISOString()
       }
-    })
+    });
 
   } catch (error) {
-    console.error('Error optimizing inventory:', error)
+    console.error('Error optimizing inventory:', error);
     return NextResponse.json(
       { error: 'Failed to optimize inventory' },
       { status: 500 }
-    )
+    );
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const action = searchParams.get('action')
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category');
+    const vertical = searchParams.get('vertical');
 
-    // Mock inventory data for demo
-    const mockInventory = [
-      {
-        id: "1",
-        currentStock: 5,
-        safetyStock: 10,
-        reorderPoint: 15,
-        reorderQuantity: 50,
-        leadTime: 7,
-        recommendedAction: "REORDER",
-        recommendationScore: 0.85,
-        product: {
-          id: "1",
-          name: "Industrial Bearing - SKF 6205",
-          sku: "SKF-6205",
-          category: "Industrial"
-        }
-      },
-      {
-        id: "2",
-        currentStock: 25,
-        safetyStock: 20,
-        reorderPoint: 30,
-        reorderQuantity: 100,
-        leadTime: 14,
-        recommendedAction: "MAINTAIN",
-        recommendationScore: 0.92,
-        product: {
-          id: "2",
-          name: "Fashion T-Shirt - Summer Collection",
-          sku: "TSH-SUM-001",
-          category: "Apparel"
-        }
+    // Get real product data
+    const allProducts = [...industrialProducts, ...apparelProducts];
+    
+    // Filter products based on query parameters
+    let filteredProducts = allProducts;
+    if (category) {
+      filteredProducts = filteredProducts.filter(p => p.category.toLowerCase().includes(category.toLowerCase()));
+    }
+    if (vertical) {
+      filteredProducts = filteredProducts.filter(p => p.vertical === vertical.toUpperCase());
+    }
+
+    // Generate inventory data with optimization recommendations
+    const inventoryData = filteredProducts.map(product => {
+      const stockLevel = product.currentStock;
+      const reorderPoint = product.reorderPoint;
+      const safetyStock = product.safetyStock;
+      const leadTime = product.leadTime;
+      
+      // Calculate stock status
+      let status = 'healthy';
+      if (stockLevel <= safetyStock) {
+        status = 'critical';
+      } else if (stockLevel <= reorderPoint) {
+        status = 'low';
       }
-    ]
 
-    const filteredInventory = action 
-      ? mockInventory.filter(item => item.recommendedAction === action)
-      : mockInventory
+      // Calculate days of stock remaining (based on average daily demand)
+      const avgDailyDemand = 5; // Mock average daily demand
+      const daysRemaining = Math.floor(stockLevel / avgDailyDemand);
+
+      return {
+        productId: product.id,
+        productName: product.name,
+        sku: product.sku,
+        category: product.category,
+        vertical: product.vertical,
+        currentStock: stockLevel,
+        reorderPoint,
+        safetyStock,
+        leadTime,
+        status,
+        daysRemaining,
+        value: stockLevel * product.price,
+        cost: stockLevel * product.cost,
+        supplier: product.supplier,
+        location: product.location,
+        lastUpdated: new Date().toISOString()
+      };
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        inventory: filteredInventory,
-        healthScore: 0.78,
-        totalItems: filteredInventory.length,
-        itemsNeedingAttention: filteredInventory.filter(item => 
-          item.recommendedAction && item.recommendedAction !== 'MAINTAIN'
-        ).length
+        products: inventoryData,
+        summary: {
+          totalProducts: inventoryData.length,
+          totalValue: inventoryData.reduce((sum, p) => sum + p.value, 0),
+          totalCost: inventoryData.reduce((sum, p) => sum + p.cost, 0),
+          criticalItems: inventoryData.filter(p => p.status === 'critical').length,
+          lowStockItems: inventoryData.filter(p => p.status === 'low').length,
+          healthyItems: inventoryData.filter(p => p.status === 'healthy').length
+        }
       }
-    })
+    });
 
   } catch (error) {
-    console.error('Error fetching inventory:', error)
+    console.error('Error fetching inventory:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch inventory' },
+      { error: 'Failed to fetch inventory data' },
       { status: 500 }
-    )
+    );
   }
 }

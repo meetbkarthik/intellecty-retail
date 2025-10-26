@@ -13,62 +13,79 @@ import {
   BarChart3,
   ArrowUpRight,
   ArrowDownRight,
-  Zap
+  Zap,
+  DollarSign,
+  Users,
+  Activity
 } from "lucide-react"
 import Link from "next/link"
+import { useEffect, useState } from "react"
+import { industrialProducts } from "@/lib/demo-data/industrial-data"
+import { apparelProducts } from "@/lib/demo-data/apparel-data"
 
 export default function DashboardPage() {
-  // Mock data - in production, this would come from API calls
-  const stats = {
-    totalProducts: 156,
-    activeForecasts: 89,
-    lowStockItems: 12,
-    highAccuracyForecasts: 94
-  }
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    activeForecasts: 0,
+    lowStockItems: 0,
+    highAccuracyForecasts: 0,
+    totalInventoryValue: 0,
+    totalCost: 0
+  });
 
-  const recentForecasts = [
-    {
-      id: 1,
-      product: "Industrial Bearing - SKF 6205",
-      forecast: 45,
-      confidence: 0.92,
-      trend: "up",
-      change: 12
-    },
-    {
-      id: 2,
-      product: "Fashion T-Shirt - Summer Collection",
-      forecast: 78,
-      confidence: 0.88,
-      trend: "down",
-      change: -5
-    },
-    {
-      id: 3,
-      product: "Mechanical Seal - Type A",
-      forecast: 23,
-      confidence: 0.95,
-      trend: "up",
-      change: 8
-    }
-  ]
+  const [recentForecasts, setRecentForecasts] = useState([]);
+  const [inventoryAlerts, setInventoryAlerts] = useState([]);
 
-  const inventoryAlerts = [
-    {
-      id: 1,
-      product: "Industrial Bearing - SKF 6205",
-      currentStock: 5,
-      reorderPoint: 10,
-      priority: "high"
-    },
-    {
-      id: 2,
-      product: "Fashion T-Shirt - Summer Collection",
-      currentStock: 15,
-      reorderPoint: 20,
-      priority: "medium"
-    }
-  ]
+  useEffect(() => {
+    // Calculate real stats from demo data
+    const allProducts = [...industrialProducts, ...apparelProducts];
+    
+    const totalProducts = allProducts.length;
+    const activeForecasts = Math.floor(totalProducts * 0.6); // 60% of products have forecasts
+    const lowStockItems = allProducts.filter(p => p.currentStock <= p.reorderPoint).length;
+    const highAccuracyForecasts = 94; // Mock accuracy
+    const totalInventoryValue = allProducts.reduce((sum, p) => sum + (p.currentStock * p.price), 0);
+    const totalCost = allProducts.reduce((sum, p) => sum + (p.currentStock * p.cost), 0);
+
+    setStats({
+      totalProducts,
+      activeForecasts,
+      lowStockItems,
+      highAccuracyForecasts,
+      totalInventoryValue,
+      totalCost
+    });
+
+    // Generate recent forecasts from real products
+    const forecasts = allProducts.slice(0, 3).map((product, index) => ({
+      id: index + 1,
+      product: product.name,
+      forecast: Math.floor(Math.random() * 50) + 20,
+      confidence: 0.85 + Math.random() * 0.1,
+      trend: Math.random() > 0.5 ? "up" : "down",
+      change: Math.floor(Math.random() * 20) - 10,
+      category: product.category,
+      vertical: product.vertical
+    }));
+
+    setRecentForecasts(forecasts);
+
+    // Generate inventory alerts from real products
+    const alerts = allProducts
+      .filter(p => p.currentStock <= p.reorderPoint)
+      .slice(0, 2)
+      .map((product, index) => ({
+        id: index + 1,
+        product: product.name,
+        currentStock: product.currentStock,
+        reorderPoint: product.reorderPoint,
+        priority: product.currentStock <= product.safetyStock ? "high" : "medium",
+        category: product.category,
+        vertical: product.vertical
+      }));
+
+    setInventoryAlerts(alerts);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -100,20 +117,20 @@ export default function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalProducts}</div>
             <p className="text-xs text-muted-foreground">
-              +12% from last month
+              Industrial & Apparel
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Forecasts</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Inventory Value</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeForecasts}</div>
+            <div className="text-2xl font-bold">${stats.totalInventoryValue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              +8% from last month
+              Total stock value
             </p>
           </CardContent>
         </Card>
@@ -133,7 +150,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">High Accuracy</CardTitle>
+            <CardTitle className="text-sm font-medium">AI Accuracy</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -169,6 +186,14 @@ export default function DashboardPage() {
                   <div className="flex-1">
                     <p className="font-medium text-sm">{forecast.product}</p>
                     <div className="flex items-center space-x-2 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        {forecast.vertical}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {forecast.category}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-2">
                       <span className="text-lg font-bold">{forecast.forecast}</span>
                       <span className="text-xs text-gray-500">units</span>
                       {forecast.trend === "up" ? (
@@ -215,6 +240,14 @@ export default function DashboardPage() {
                   <div className="flex-1">
                     <p className="font-medium text-sm">{alert.product}</p>
                     <div className="flex items-center space-x-2 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        {alert.vertical}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {alert.category}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-2">
                       <span className="text-sm text-gray-600">Current: {alert.currentStock}</span>
                       <span className="text-sm text-gray-600">Reorder: {alert.reorderPoint}</span>
                     </div>

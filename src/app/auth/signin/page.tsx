@@ -153,6 +153,16 @@ export default function SignInPage() {
               Sign up
             </Link>
           </div>
+
+          {/* Demo Credentials */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h4 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials:</h4>
+            <div className="text-xs text-blue-800 space-y-1">
+              <p><strong>Admin:</strong> admin@intellecty.com / admin123</p>
+              <p><strong>Customer:</strong> customer@intellecty.com / customer123</p>
+              <p><strong>Demo:</strong> demo@intellecty.com / demo123</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
