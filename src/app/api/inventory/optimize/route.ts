@@ -50,22 +50,11 @@ export async function POST(request: NextRequest) {
         productCategory: product.category,
         currentStock: currentStock || product.currentStock,
         leadTimeDays,
-        optimization: {
-          optimalReorderPoint: optimizationResult.optimalReorderPoint,
-          optimalSafetyStock: optimizationResult.optimalSafetyStock,
-          recommendedOrderQuantity: optimizationResult.recommendedOrderQuantity,
-          wastePrediction: optimizationResult.wastePrediction,
-          carbonFootprintReduction: optimizationResult.carbonFootprintReduction,
-          costSavings: optimizationResult.costSavings,
-          recommendations: optimizationResult.recommendations
-        },
-        forecast: {
-          horizon,
-          predictedDemand: forecastResult.forecast,
-          accuracy: 100 - forecastResult.mape,
-          mape: forecastResult.mape,
-          insights: forecastResult.insights
-        },
+        optimalReorderPoint: optimizationResult.optimalReorderPoint,
+        optimalSafetyStock: optimizationResult.optimalSafetyStock,
+        recommendedOrderQuantity: optimizationResult.recommendedOrderQuantity,
+        wastePrediction: optimizationResult.wastePrediction,
+        carbonFootprintReduction: optimizationResult.carbonFootprintReduction,
         generatedAt: new Date().toISOString()
       }
     });
