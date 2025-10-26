@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { IntellectAIService } from '@/lib/ai/IntellectAIService';
+import { SimpleAIService } from '@/lib/ai/SimpleAIService';
 import { industrialProducts } from '@/lib/demo-data/industrial-data';
 import { apparelProducts } from '@/lib/demo-data/apparel-data';
 
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Initialize AI service
-    const aiService = new IntellectAIService('demo-tenant');
+    const aiService = new SimpleAIService('demo-tenant');
 
     // Find the product
     const allProducts = [...industrialProducts, ...apparelProducts];
