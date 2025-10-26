@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SimpleAIService } from '@/lib/ai/SimpleAIService';
 import { industrialProducts } from '@/lib/demo-data/industrial-data';
 import { apparelProducts } from '@/lib/demo-data/apparel-data';
 
@@ -12,9 +11,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
-    // Initialize AI service
-    const aiService = new SimpleAIService('demo-tenant');
-
     // Find the product
     const allProducts = [...industrialProducts, ...apparelProducts];
     const product = allProducts.find(p => p.id === productId);
@@ -26,20 +22,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate demand forecast for optimization
-    const forecastResult = await aiService.generateDemandForecast(
-      productId,
-      horizon,
-      "Los Angeles",
-      product.vertical as 'INDUSTRIAL' | 'APPAREL' | 'GENERAL'
-    );
-
-    // Get inventory optimization recommendations
-    const optimizationResult = await aiService.getInventoryOptimization(
-      productId,
-      currentStock || product.currentStock,
-      leadTimeDays,
-      forecastResult.forecast
+    // Generate simple mock optimization
+    const avgDailyDemand = 5; // Mock average daily demand
+    const optimalReorderPoint = Math.round(avgDailyDemand * leadTimeDays * 1.2);
+    const optimalSafetyStock = Math.round(avgDailyDemand * 7);
+    const recommendedOrderQuantity = Math.round(
+      Math.max(0, optimalReorderPoint + optimalSafetyStock - (currentStock || product.currentStock) + avgDailyDemand * 30)
     );
 
     return NextResponse.json({
@@ -50,11 +38,11 @@ export async function POST(request: NextRequest) {
         productCategory: product.category,
         currentStock: currentStock || product.currentStock,
         leadTimeDays,
-        optimalReorderPoint: optimizationResult.optimalReorderPoint,
-        optimalSafetyStock: optimizationResult.optimalSafetyStock,
-        recommendedOrderQuantity: optimizationResult.recommendedOrderQuantity,
-        wastePrediction: optimizationResult.wastePrediction,
-        carbonFootprintReduction: optimizationResult.carbonFootprintReduction,
+        optimalReorderPoint,
+        optimalSafetyStock,
+        recommendedOrderQuantity,
+        wastePrediction: parseFloat((Math.random() * 10).toFixed(2)),
+        carbonFootprintReduction: parseFloat((Math.random() * 20).toFixed(2)),
         generatedAt: new Date().toISOString()
       }
     });

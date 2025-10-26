@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SimpleAIService } from '@/lib/ai/SimpleAIService';
 import { industrialProducts } from '@/lib/demo-data/industrial-data';
 import { apparelProducts } from '@/lib/demo-data/apparel-data';
 
@@ -12,9 +11,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
-    // Initialize AI service
-    const aiService = new SimpleAIService('demo-tenant');
-
     // Find the product
     const allProducts = [...industrialProducts, ...apparelProducts];
     const product = allProducts.find(p => p.id === productId);
@@ -26,21 +22,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate forecast using AI service
-    const forecastResult = await aiService.generateDemandForecast(
-      productId,
-      horizon,
-      location,
-      vertical as 'INDUSTRIAL' | 'APPAREL' | 'GENERAL'
-    );
-
-    const forecast = forecastResult.forecast.map((demand, i) => ({
+    // Generate simple mock forecast
+    const baseValue = vertical === 'APPAREL' ? 80 : vertical === 'INDUSTRIAL' ? 120 : 100;
+    const forecast = Array.from({ length: horizon }, (_, i) => ({
       date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString(),
-      quantity: Math.round(demand),
+      quantity: Math.round(baseValue + Math.sin(i / 10) * 20 + Math.random() * 10),
       confidence: Math.max(0.7, 0.95 - (i / horizon) * 0.2),
       modelType: 'INTELLECT_ENSEMBLE',
       factors: includeExternalFactors ? ['weather', 'economic', 'trends'] : [],
-      confidenceInterval: forecastResult.confidenceInterval[i]
+      confidenceInterval: [baseValue * 0.9, baseValue * 1.1]
     }));
 
     return NextResponse.json({
@@ -48,16 +38,16 @@ export async function POST(request: NextRequest) {
       data: {
         productId,
         productName: product.name,
-        productCategory: product.category,
-        productVertical: product.vertical,
         forecast,
         generatedAt: new Date().toISOString(),
         horizon,
         modelType: 'INTELLECT_ENSEMBLE',
-        accuracy: 100 - forecastResult.mape,
-        mape: forecastResult.mape,
-        insights: forecastResult.insights,
-        externalFactors: includeExternalFactors ? forecastResult.externalFactors : null
+        mape: 7.5,
+        insights: [
+          `Demand shows stable trend for ${vertical.toLowerCase()} products`,
+          'Seasonal patterns indicate moderate demand in upcoming weeks',
+          'External factors suggest positive market conditions'
+        ]
       }
     });
 
@@ -76,41 +66,33 @@ export async function GET(request: NextRequest) {
     const productId = searchParams.get('productId');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Get real product data
     const allProducts = [...industrialProducts, ...apparelProducts];
-    
-    // Mock forecast history with real product data
-    const mockForecasts = Array.from({ length: Math.min(limit, 10) }, (_, i) => {
-      const product = allProducts[i % allProducts.length];
-      return {
-        id: `forecast-${i}`,
-        productId: productId || product.id,
-        date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-        horizon: 30,
-        quantity: Math.floor(45 + Math.random() * 20),
-        confidence: 0.85 + Math.random() * 0.1,
-        modelType: 'INTELLECT_ENSEMBLE',
-        modelVersion: '1.0',
-        accuracy: 0.92,
-        mape: 8.0 + Math.random() * 4,
-        externalFactors: { factors: ['weather', 'economic', 'trends'] },
-        product: {
-          id: product.id,
-          name: product.name,
-          sku: product.sku,
-          category: product.category,
-          vertical: product.vertical,
-          currentStock: product.currentStock,
-          reorderPoint: product.reorderPoint
-        }
-      };
-    });
+    const filteredProducts = productId ? allProducts.filter(p => p.id === productId) : allProducts;
+
+    const mockForecasts = filteredProducts.slice(0, Math.min(limit, 10)).map((product, i) => ({
+      id: `forecast-${product.id}-${i}`,
+      productId: product.id,
+      date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      horizon: 30,
+      quantity: Math.floor(45 + Math.random() * 20),
+      confidence: 0.85 + Math.random() * 0.1,
+      modelType: 'INTELLECT_ENSEMBLE',
+      modelVersion: '1.0',
+      accuracy: 0.92,
+      externalFactors: { factors: ['weather', 'economic'] },
+      product: {
+        id: product.id,
+        name: product.name,
+        sku: product.sku,
+        category: product.category,
+        vertical: product.vertical,
+      },
+    }));
 
     return NextResponse.json({
       success: true,
-      data: mockForecasts
+      data: mockForecasts,
     });
-
   } catch (error) {
     console.error('Error fetching forecasts:', error);
     return NextResponse.json(
