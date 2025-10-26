@@ -1,6 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { industrialProducts } from '@/lib/demo-data/industrial-data';
-import { apparelProducts } from '@/lib/demo-data/apparel-data';
+
+// Inline demo data to avoid import issues
+const demoProducts = [
+  {
+    id: "IND-001",
+    name: "SKF 6205 Deep Groove Ball Bearing",
+    category: "Bearings",
+    sku: "SKF-6205-2RS",
+    price: 45.50,
+    cost: 28.75,
+    currentStock: 125,
+    reorderPoint: 50,
+    safetyStock: 25,
+    leadTime: 14,
+    supplier: "SKF Bearings Ltd",
+    location: "Warehouse A",
+    vertical: "INDUSTRIAL"
+  },
+  {
+    id: "APP-001",
+    name: "Classic Cotton T-Shirt",
+    category: "Tops",
+    sku: "TSH-001-BLK-M",
+    price: 24.99,
+    cost: 12.50,
+    currentStock: 200,
+    reorderPoint: 75,
+    safetyStock: 30,
+    leadTime: 7,
+    supplier: "Fashion Forward Inc",
+    location: "Warehouse B",
+    vertical: "APPAREL"
+  }
+];
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,8 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the product
-    const allProducts = [...industrialProducts, ...apparelProducts];
-    const product = allProducts.find(p => p.id === productId);
+    const product = demoProducts.find(p => p.id === productId);
     
     if (!product) {
       return NextResponse.json(
@@ -62,11 +93,8 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const vertical = searchParams.get('vertical');
 
-    // Get real product data
-    const allProducts = [...industrialProducts, ...apparelProducts];
-    
     // Filter products based on query parameters
-    let filteredProducts = allProducts;
+    let filteredProducts = demoProducts;
     if (category) {
       filteredProducts = filteredProducts.filter(p => p.category.toLowerCase().includes(category.toLowerCase()));
     }
