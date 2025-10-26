@@ -1,0 +1,364 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Multi-tenant architecture with proper isolation
+model Tenant {
+  id          String   @id @default(cuid())
+  name        String
+  subdomain   String   @unique
+  domain      String?
+  tier        Tier     @default(FREE)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Tenant-specific settings
+  settings    Json?
+  features    Json?
+  
+  // Relationships
+  users       User[]
+  products    Product[]
+  sales       Sale[]
+  forecasts   Forecast[]
+  inventory   Inventory[]
+  dataSources DataSource[]
+  analytics   Analytics[]
+  
+  @@map("tenants")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  role      Role     @default(USER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Tenant relationship
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Authentication
+  accounts  Account[]
+  sessions  Session[]
+  
+  @@map("users")
+}
+
+// NextAuth.js models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Product catalog with vertical-specific attributes
+model Product {
+  id          String   @id @default(cuid())
+  sku         String
+  name        String
+  description String?
+  category    String
+  subcategory String?
+  brand       String?
+  
+  // Vertical-specific attributes
+  vertical    Vertical @default(INDUSTRIAL)
+  attributes  Json?    // Flexible attributes for different verticals
+  
+  // Pricing
+  costPrice   Decimal?
+  sellingPrice Decimal?
+  
+  // Physical attributes
+  weight      Decimal?
+  dimensions  Json?
+  
+  // Status
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Tenant relationship
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Relationships
+  sales       Sale[]
+  forecasts   Forecast[]
+  inventory   Inventory[]
+  
+  @@unique([tenantId, sku])
+  @@map("products")
+}
+
+// Sales data with comprehensive tracking
+model Sale {
+  id          String   @id @default(cuid())
+  date        DateTime
+  quantity    Int
+  unitPrice   Decimal
+  totalAmount Decimal
+  
+  // Channel information
+  channel     Channel  @default(RETAIL)
+  location    String?
+  
+  // Product relationship
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Tenant relationship
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Additional metadata
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  
+  @@map("sales")
+}
+
+// AI-powered forecasting with multiple models
+model Forecast {
+  id          String   @id @default(cuid())
+  date        DateTime
+  horizon     Int      // Days ahead
+  quantity    Decimal
+  confidence  Decimal  // 0-1 confidence score
+  
+  // Model information
+  modelType   ModelType
+  modelVersion String
+  accuracy    Decimal?
+  
+  // Product relationship
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Tenant relationship
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // External factors
+  externalFactors Json?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("forecasts")
+}
+
+// Inventory optimization with AI recommendations
+model Inventory {
+  id              String   @id @default(cuid())
+  currentStock    Int
+  safetyStock     Int
+  reorderPoint    Int
+  reorderQuantity Int
+  leadTime        Int      // Days
+  
+  // AI recommendations
+  recommendedAction ActionType?
+  recommendationScore Decimal?
+  
+  // Cost optimization
+  carryingCost    Decimal?
+  stockoutCost    Decimal?
+  
+  // Product relationship
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Tenant relationship
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Status tracking
+  lastUpdated     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([tenantId, productId])
+  @@map("inventory")
+}
+
+// Data source integration tracking
+model DataSource {
+  id          String   @id @default(cuid())
+  name        String
+  type        DataSourceType
+  connection  Json     // Connection configuration
+  status      Status   @default(ACTIVE)
+  
+  // Schema mapping
+  schemaMapping Json?
+  lastSync     DateTime?
+  syncFrequency Int?   // Minutes
+  
+  // Tenant relationship
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("data_sources")
+}
+
+// Analytics and insights
+model Analytics {
+  id          String   @id @default(cuid())
+  type        AnalyticsType
+  data        Json
+  insights    Json?
+  
+  // Time period
+  startDate   DateTime
+  endDate     DateTime
+  
+  // Tenant relationship
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("analytics")
+}
+
+// External API data cache
+model ExternalData {
+  id          String   @id @default(cuid())
+  source      String   // API source name
+  data        Json
+  expiresAt   DateTime
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("external_data")
+}
+
+// Enums
+enum Tier {
+  FREE
+  GROWTH
+  PREMIUM
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+  VIEWER
+}
+
+enum Vertical {
+  INDUSTRIAL
+  APPAREL
+  ELECTRONICS
+  FOOD_BEVERAGE
+  HEALTHCARE
+  AUTOMOTIVE
+  GENERAL
+}
+
+enum Channel {
+  RETAIL
+  ONLINE
+  WHOLESALE
+  MOBILE
+  MARKETPLACE
+}
+
+enum ModelType {
+  PROPHET
+  XGBOOST
+  LSTM
+  TRANSFORMER
+  ENSEMBLE
+  INTELLECT_TEMPORAL
+  INTELLECT_FASHION
+  INTELLECT_MANUFACTURING
+}
+
+enum ActionType {
+  REORDER
+  REDUCE
+  MAINTAIN
+  PROMOTE
+  DISCONTINUE
+}
+
+enum DataSourceType {
+  POS
+  ECOMMERCE
+  ERP
+  WMS
+  EXCEL
+  CSV
+  API
+  DATABASE
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  ERROR
+  SYNCING
+}
+
+enum AnalyticsType {
+  SALES_TREND
+  INVENTORY_HEALTH
+  FORECAST_ACCURACY
+  PROFITABILITY
+  SEASONALITY
+  EXTERNAL_IMPACT
+  SUSTAINABILITY
+}

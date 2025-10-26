@@ -1,0 +1,72 @@
+{
+  "timestamp": "2025-10-26T07:32:24.187Z",
+  "baseUrl": "https://intellecty-retail-2js1495ce-meetbkarthiks-projects.vercel.app",
+  "bypassTokenUsed": false,
+  "summary": {
+    "passed": 15,
+    "failed": 0,
+    "successRate": "100.0"
+  },
+  "tests": [
+    {
+      "name": "Landing Page",
+      "status": "PASSED"
+    },
+    {
+      "name": "Tenant Info API",
+      "status": "PASSED"
+    },
+    {
+      "name": "Weather API",
+      "status": "PASSED"
+    },
+    {
+      "name": "Economic API",
+      "status": "PASSED"
+    },
+    {
+      "name": "ABC Analysis API",
+      "status": "PASSED"
+    },
+    {
+      "name": "Inventory Optimization API",
+      "status": "PASSED"
+    },
+    {
+      "name": "Forecast Generation API",
+      "status": "PASSED"
+    },
+    {
+      "name": "Sign In Page",
+      "status": "PASSED"
+    },
+    {
+      "name": "Sign Up Page",
+      "status": "PASSED"
+    },
+    {
+      "name": "Dashboard Page",
+      "status": "PASSED"
+    },
+    {
+      "name": "Forecasting Page",
+      "status": "PASSED"
+    },
+    {
+      "name": "Inventory Page",
+      "status": "PASSED"
+    },
+    {
+      "name": "Analytics Page",
+      "status": "PASSED"
+    },
+    {
+      "name": "Data Sources Page",
+      "status": "PASSED"
+    },
+    {
+      "name": "Settings Page",
+      "status": "PASSED"
+    }
+  ]
+}
