@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Brain, TrendingUp, Shield, Zap, Globe, BarChart3, Target, CheckCircle, Leaf, Lightbulb, Lock, Users, Calendar, MessageCircle, Star, Award, Target as TargetIcon, DollarSign, Clock, TrendingDown, Activity } from "lucide-react";
+import { ArrowRight, Brain, TrendingUp, Shield, Zap, Globe, BarChart3, Target, CheckCircle, Leaf, Lightbulb, Lock, Users, Calendar, MessageCircle, Star, Award, Target as TargetIcon, DollarSign, Clock, TrendingDown, Activity, Rocket, Building2, Car, ShoppingCart, Shirt, Wrench, Smartphone, Heart, Mountain, Sofa, Gem, BookOpen, Gamepad2, Briefcase, PawPrint, Wine } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -18,6 +18,7 @@ export default function HomePage() {
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <Link href="#features" className="text-gray-600 hover:text-blue-600 transition-colors">Features</Link>
+              <Link href="#industries" className="text-gray-600 hover:text-blue-600 transition-colors">Industries</Link>
               <Link href="#pricing" className="text-gray-600 hover:text-blue-600 transition-colors">Pricing</Link>
               <Link href="#testimonials" className="text-gray-600 hover:text-blue-600 transition-colors">Testimonials</Link>
               <Link href="#contact" className="text-gray-600 hover:text-blue-600 transition-colors">Contact</Link>
@@ -37,43 +38,43 @@ export default function HomePage() {
       {/* Hero Section with Background Image */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Image
-            src="/src/assets/siteimages/public/publichome.jpg"
+        <Image
+            src="/publichome.jpg"
             alt="Intellecty Retail Intelligence Platform"
             fill
-            className="object-cover opacity-10"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20"></div>
+            className="object-cover opacity-15"
+          priority
+        />
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/30 to-purple-600/30"></div>
         </div>
         <div className="relative z-10 max-w-7xl mx-auto">
           <div className="text-center">
-            <span className="inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium w-fit whitespace-nowrap shrink-0 border-transparent bg-blue-100 text-blue-800 mb-6">
-              <Star className="h-4 w-4 mr-2" />
+            <span className="inline-flex items-center justify-center rounded-full border px-6 py-3 text-lg font-bold w-fit whitespace-nowrap shrink-0 border-transparent bg-gradient-to-r from-blue-600 to-purple-600 text-white mb-8 shadow-lg">
+              <Rocket className="h-6 w-6 mr-3" />
               The World's First Adaptive Retail Intelligence Platform
             </span>
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight">
               AI-Driven Intelligence and <span className="text-blue-600">Sustainability</span><br />for the Future of Retail
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-4xl mx-auto">
-              Intelligence infused across the entire enterprise value chain to drive amplified value. 
-              <br />Retail intelligence for retailers of all sizes — from corner stores to global chains.
+          </h1>
+            <p className="text-2xl text-gray-700 mb-10 max-w-5xl mx-auto leading-relaxed">
+              Intelligence infused across the entire enterprise value chain to drive amplified value.<br />
+              <span className="font-bold text-gray-900">Retail intelligence for retailers of all sizes</span> — from corner stores to global chains.
               <br />
-              <span className="font-semibold text-gray-900">No setup. No data team. Just intelligence that grows with your business.</span>
+              <span className="font-semibold text-gray-800 text-xl">No setup. No data team. Just intelligence that grows with your business.</span>
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link href="/auth/signup">
-                <Button className="h-12 px-8 w-full sm:w-auto text-lg font-semibold">
+                <Button className="h-14 px-10 w-full sm:w-auto text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl">
                   Start Free Trial
                 </Button>
               </Link>
               <Link href="#how-it-works">
-                <Button variant="outline" className="h-12 px-8 w-full sm:w-auto text-lg font-semibold">
+                <Button variant="outline" className="h-14 px-10 w-full sm:w-auto text-xl font-bold border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white shadow-lg">
                   See How It Works
                 </Button>
               </Link>
             </div>
-            <p className="text-sm text-gray-500 mt-4">Built for every retailer. Designed for every scale.</p>
+            <p className="text-lg text-gray-600 mt-6">Built for every retailer. Designed for every scale.</p>
           </div>
         </div>
       </section>
@@ -187,8 +188,111 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Industries Section */}
+      <section id="industries" className="py-20 bg-gradient-to-br from-blue-50 to-indigo-100 px-6">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-4xl font-bold text-center mb-4">🏭 Industries We Serve</h2>
+          <p className="text-xl text-center text-gray-700 mb-12 max-w-4xl mx-auto">
+            15 Core Verticals with AI Specialization - Each industry gets tailored intelligence for maximum impact
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <IndustryCard
+              icon={<Wrench className="text-blue-600" size={32} />}
+              title="Industrial & Mechanical Spare Parts"
+              description="PMI, oil prices, maintenance cycles"
+              color="blue"
+            />
+            <IndustryCard
+              icon={<Car className="text-red-600" size={32} />}
+              title="Automotive & Auto Parts"
+              description="OEM demand, fuel price index, vehicle age correlation"
+              color="red"
+            />
+            <IndustryCard
+              icon={<ShoppingCart className="text-green-600" size={32} />}
+              title="Grocery & FMCG"
+              description="Perishable goods, temperature sensitivity, promotion planning"
+              color="green"
+            />
+            <IndustryCard
+              icon={<Shirt className="text-purple-600" size={32} />}
+              title="Apparel & Fashion"
+              description="Seasonal collections, size optimization, trend forecasting"
+              color="purple"
+            />
+            <IndustryCard
+              icon={<Building2 className="text-orange-600" size={32} />}
+              title="Home Improvement & DIY"
+              description="Project-based demand, weather-impacted products"
+              color="orange"
+            />
+            <IndustryCard
+              icon={<Smartphone className="text-indigo-600" size={32} />}
+              title="Electronics & Technology"
+              description="Product lifecycle, bundle optimization, warranty management"
+              color="indigo"
+            />
+            <IndustryCard
+              icon={<Heart className="text-pink-600" size={32} />}
+              title="Health & Beauty"
+              description="Expiry management, regulatory compliance, seasonal wellness"
+              color="pink"
+            />
+            <IndustryCard
+              icon={<Mountain className="text-emerald-600" size={32} />}
+              title="Sports & Outdoor"
+              description="Seasonal sports, weather dependencies, event-driven demand"
+              color="emerald"
+            />
+            <IndustryCard
+              icon={<Sofa className="text-amber-600" size={32} />}
+              title="Furniture & Home Furnishings"
+              description="Long lead times, big-ticket items, home buying cycles"
+              color="amber"
+            />
+            <IndustryCard
+              icon={<Gem className="text-rose-600" size={32} />}
+              title="Jewelry & Luxury Goods"
+              description="High-value inventory, gift occasions, economic sensitivity"
+              color="rose"
+            />
+            <IndustryCard
+              icon={<BookOpen className="text-cyan-600" size={32} />}
+              title="Books & Media"
+              description="New release patterns, curriculum cycles, digital-physical blend"
+              color="cyan"
+            />
+            <IndustryCard
+              icon={<Gamepad2 className="text-violet-600" size={32} />}
+              title="Toys & Hobbies"
+              description="Age-specific demand, holiday concentration, licensing impacts"
+              color="violet"
+            />
+            <IndustryCard
+              icon={<Briefcase className="text-slate-600" size={32} />}
+              title="Office Supplies"
+              description="B2B patterns, back-to-school, tax season, contract pricing"
+              color="slate"
+            />
+            <IndustryCard
+              icon={<PawPrint className="text-lime-600" size={32} />}
+              title="Pet Supplies"
+              description="Pet population trends, seasonal care, subscription models"
+              color="lime"
+            />
+            <IndustryCard
+              icon={<Wine className="text-amber-600" size={32} />}
+              title="Liquor & Beverages"
+              description="Regulatory constraints, seasonal patterns, event-driven demand"
+              color="amber"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Designed for Every Business */}
-      <section id="designed-for-business" className="py-20 bg-blue-50 text-center px-6">
+      <section id="designed-for-business" className="py-20 bg-white text-center px-6">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-bold mb-8">💼 Designed for Every Business</h2>
           <p className="text-lg max-w-3xl mx-auto leading-relaxed mb-12">
@@ -210,9 +314,12 @@ export default function HomePage() {
       </section>
 
       {/* Proven Business Outcomes */}
-      <section className="py-20 bg-white px-6">
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50 px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-12">📊 Proven Business Outcomes</h2>
+          <h2 className="text-4xl font-bold text-center mb-4">📊 Proven Business Outcomes</h2>
+          <p className="text-xl text-center text-gray-700 mb-12 max-w-4xl mx-auto">
+            Measurable results that drive real business value and competitive advantage
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <OutcomeCard
               icon={<TrendingUp className="text-green-500" size={48} />}
@@ -399,20 +506,20 @@ export default function HomePage() {
       </section>
 
       {/* Ready to Experience */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-blue-600">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-8">Ready to Experience Intelligent Retail?</h2>
           <p className="text-xl text-blue-100 mb-8">Join forward-thinking retailers and manufacturers using Intellecty Retail to plan smarter, operate leaner, and grow faster — without complexity.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/signup">
-              <Button className="h-12 rounded-md px-8 w-full sm:w-auto text-lg font-semibold bg-white text-blue-600 hover:bg-gray-100">
+              <Button className="h-14 rounded-md px-10 w-full sm:w-auto text-xl font-bold bg-white text-blue-600 hover:bg-gray-100 shadow-xl">
                 Start Free Trial
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link href="#contact">
-              <Button variant="outline" className="h-12 rounded-md px-8 w-full sm:w-auto text-lg font-semibold border-white text-white hover:bg-white hover:text-blue-600">
-                <Calendar className="mr-2 h-4 w-4" />
+              <Button variant="outline" className="h-14 rounded-md px-10 w-full sm:w-auto text-xl font-bold border-2 border-white text-white hover:bg-white hover:text-blue-600 shadow-lg">
+                <Calendar className="mr-2 h-5 w-5" />
                 Book a Demo
               </Button>
             </Link>
@@ -486,9 +593,9 @@ export default function HomePage() {
               <h3 className="font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-gray-400">
                 <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
+                <li><Link href="#industries" className="hover:text-white transition-colors">Industries</Link></li>
                 <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
                 <li><Link href="#designed-for-business" className="hover:text-white transition-colors">Industries</Link></li>
-                <li><Link href="#features" className="hover:text-white transition-colors">Sustainability</Link></li>
               </ul>
             </div>
             <div>
@@ -547,6 +654,26 @@ function FeatureCard({ icon, title, description, value }: {
   );
 }
 
+// Industry Card Component
+function IndustryCard({ icon, title, description, color }: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  color: string;
+}) {
+  return (
+    <Card className="py-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105">
+      <CardContent className="px-6 text-center">
+        <div className="flex justify-center mb-4">
+          {icon}
+        </div>
+        <h3 className="font-semibold text-lg text-gray-900 mb-2">{title}</h3>
+        <p className="text-sm text-gray-600">{description}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 // Outcome Card Component
 function OutcomeCard({ icon, value, description, detail }: {
   icon: React.ReactNode;
@@ -560,7 +687,7 @@ function OutcomeCard({ icon, value, description, detail }: {
         <div className="flex justify-center mb-4">
           {icon}
         </div>
-        <div className="text-4xl font-bold text-blue-600 mb-2">{value}</div>
+        <div className="text-5xl font-bold text-blue-600 mb-2">{value}</div>
         <div className="text-lg font-semibold text-gray-900 mb-1">{description}</div>
         <div className="text-sm text-gray-600">{detail}</div>
       </CardContent>
