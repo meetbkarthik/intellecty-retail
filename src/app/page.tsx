@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Brain, TrendingUp, Shield, Zap, Globe, BarChart3, Target, CheckCircle, Leaf, Lightbulb, Lock, Users, Calendar, MessageCircle } from "lucide-react";
+import { ArrowRight, Brain, TrendingUp, Shield, Zap, Globe, BarChart3, Target, CheckCircle, Leaf, Lightbulb, Lock, Users, Calendar, MessageCircle, Star, Award, Target as TargetIcon, DollarSign, Clock, TrendingDown, Activity } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function HomePage() {
   return (
@@ -33,28 +34,41 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      {/* Hero Section with Background Image */}
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/src/assets/siteimages/public/publichome.jpg"
+            alt="Intellecty Retail Intelligence Platform"
+            fill
+            className="object-cover opacity-10"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20"></div>
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto">
           <div className="text-center">
-            <span className="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 border-transparent bg-secondary text-secondary-foreground mb-4">
-              🚀 The World's First Adaptive Retail Intelligence Platform
+            <span className="inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium w-fit whitespace-nowrap shrink-0 border-transparent bg-blue-100 text-blue-800 mb-6">
+              <Star className="h-4 w-4 mr-2" />
+              The World's First Adaptive Retail Intelligence Platform
             </span>
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              Intelligence That <span className="text-blue-600">Understands</span><br />Retail
-          </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              From corner stores to global chains, Intellecty Retail unifies every retail signal — sales, inventory, supply, weather, and market dynamics — into one adaptive, learning system.<br />
+              AI-Driven Intelligence and <span className="text-blue-600">Sustainability</span><br />for the Future of Retail
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 max-w-4xl mx-auto">
+              Intelligence infused across the entire enterprise value chain to drive amplified value. 
+              <br />Retail intelligence for retailers of all sizes — from corner stores to global chains.
+              <br />
               <span className="font-semibold text-gray-900">No setup. No data team. Just intelligence that grows with your business.</span>
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/auth/signup">
-                <Button className="h-10 px-6 w-full sm:w-auto">
+                <Button className="h-12 px-8 w-full sm:w-auto text-lg font-semibold">
                   Start Free Trial
                 </Button>
               </Link>
               <Link href="#how-it-works">
-                <Button variant="outline" className="h-10 px-6 w-full sm:w-auto">
+                <Button variant="outline" className="h-12 px-8 w-full sm:w-auto text-lg font-semibold">
                   See How It Works
                 </Button>
               </Link>
@@ -86,13 +100,14 @@ export default function HomePage() {
           <p className="text-lg max-w-3xl mx-auto leading-relaxed mb-12">
             Retailers today face real and rising challenges:
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {[
               "Fragmented systems that don't connect",
               "Unpredictable demand and wasted inventory",
               "Rising input and material costs",
               "Missed opportunities due to lack of visibility",
-              "Increasing pressure to grow sustainably"
+              "Increasing pressure to grow sustainably",
+              "Complex data silos preventing smart decisions"
             ].map((point, index) => (
               <Card key={index} className="shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <CardContent className="p-6 flex items-center space-x-4">
@@ -162,6 +177,12 @@ export default function HomePage() {
               description="AI that manages itself — monitoring performance, detecting anomalies, and adapting automatically. Your business intelligence keeps running even when you're not watching."
               value="Reliable, always-on insights that keep you ahead, not just informed."
             />
+            <FeatureCard
+              icon={<TargetIcon className="text-pink-500" size={36} />}
+              title="Predictive Risk Management"
+              description="Anticipate supply chain disruptions, market volatility, and operational risks before they impact your business. Advanced AI models provide early warning signals and mitigation strategies."
+              value="Stay ahead of challenges and maintain business continuity in uncertain times."
+            />
           </div>
         </div>
       </section>
@@ -190,45 +211,47 @@ export default function HomePage() {
 
       {/* Proven Business Outcomes */}
       <section className="py-20 bg-white px-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-12">📊 Proven Business Outcomes</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Impact Area</th>
-                  <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Typical Results (Validated Range)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-3">Forecast Accuracy</td>
-                  <td className="border border-gray-300 px-4 py-3">+25–35% improvement</td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-3">Inventory Carrying Cost</td>
-                  <td className="border border-gray-300 px-4 py-3">−25–45% reduction</td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-3">Waste & Overstock</td>
-                  <td className="border border-gray-300 px-4 py-3">−15–30% reduction</td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-3">Planning Time</td>
-                  <td className="border border-gray-300 px-4 py-3">−60–75% faster</td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-3">Decision Speed</td>
-                  <td className="border border-gray-300 px-4 py-3">+50–65% faster</td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-3">Revenue Growth</td>
-                  <td className="border border-gray-300 px-4 py-3">+10–20% increase</td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <OutcomeCard
+              icon={<TrendingUp className="text-green-500" size={48} />}
+              value="+30%"
+              description="Forecast Accuracy Improvement"
+              detail="Enhanced prediction precision"
+            />
+            <OutcomeCard
+              icon={<TrendingDown className="text-red-500" size={48} />}
+              value="-35%"
+              description="Inventory Carrying Cost Reduction"
+              detail="Optimized stock management"
+            />
+            <OutcomeCard
+              icon={<Activity className="text-orange-500" size={48} />}
+              value="-22%"
+              description="Waste & Overstock Reduction"
+              detail="Smarter inventory planning"
+            />
+            <OutcomeCard
+              icon={<Clock className="text-blue-500" size={48} />}
+              value="-70%"
+              description="Planning Time Reduction"
+              detail="Faster decision making"
+            />
+            <OutcomeCard
+              icon={<Zap className="text-purple-500" size={48} />}
+              value="+60%"
+              description="Decision Speed Increase"
+              detail="Real-time insights"
+            />
+            <OutcomeCard
+              icon={<DollarSign className="text-green-600" size={48} />}
+              value="+15%"
+              description="Revenue Growth Increase"
+              detail="Data-driven growth"
+            />
           </div>
-          <blockquote className="mt-8 text-xl italic font-semibold text-gray-700 text-center">
+          <blockquote className="mt-12 text-xl italic font-semibold text-gray-700 text-center">
             Real results — delivered by data, not assumptions.
           </blockquote>
         </div>
@@ -382,13 +405,13 @@ export default function HomePage() {
           <p className="text-xl text-blue-100 mb-8">Join forward-thinking retailers and manufacturers using Intellecty Retail to plan smarter, operate leaner, and grow faster — without complexity.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/signup">
-              <Button className="h-10 rounded-md px-6 w-full sm:w-auto">
+              <Button className="h-12 rounded-md px-8 w-full sm:w-auto text-lg font-semibold bg-white text-blue-600 hover:bg-gray-100">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
             <Link href="#contact">
-              <Button variant="outline" className="h-10 rounded-md px-6 w-full sm:w-auto border-white text-white hover:bg-white hover:text-blue-600">
+              <Button variant="outline" className="h-12 rounded-md px-8 w-full sm:w-auto text-lg font-semibold border-white text-white hover:bg-white hover:text-blue-600">
                 <Calendar className="mr-2 h-4 w-4" />
                 Book a Demo
               </Button>
@@ -519,6 +542,27 @@ function FeatureCard({ icon, title, description, value }: {
           <p className="text-sm font-medium text-gray-900">Key Value:</p>
           <p className="text-sm text-gray-700">{value}</p>
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Outcome Card Component
+function OutcomeCard({ icon, value, description, detail }: {
+  icon: React.ReactNode;
+  value: string;
+  description: string;
+  detail: string;
+}) {
+  return (
+    <Card className="py-8 text-center shadow-sm hover:shadow-lg transition-shadow duration-300">
+      <CardContent className="px-6">
+        <div className="flex justify-center mb-4">
+          {icon}
+        </div>
+        <div className="text-4xl font-bold text-blue-600 mb-2">{value}</div>
+        <div className="text-lg font-semibold text-gray-900 mb-1">{description}</div>
+        <div className="text-sm text-gray-600">{detail}</div>
       </CardContent>
     </Card>
   );
